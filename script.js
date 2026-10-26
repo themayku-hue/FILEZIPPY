@@ -117,8 +117,35 @@ function showImagesInGrid() {
 
 function generatePDFFromImages() {
     if(imagesList.length === 0) return alert("फोटो तो चुनो भाई!");
-    alert(`आपकी सभी ${imagesList.length} तस्वीरों की PDF फाइल बन गई है!`);
+    
+    // 1. बैकग्राउंड में एक नया खाली प्रिंट पेज खोलें
+    const printWindow = window.open('', '_blank');
+    if(!printWindow) return alert("पॉप-अप ब्लॉक है, कृपया ब्राउज़र में पॉप-अप की अनुमति दें।");
+    
+    // 2. उसमें पीडीएफ का ढांचा और सीएसएस लिखें ताकि फोटो पूरे पन्ने पर आए
+    printWindow.document.write('<html><head><title>FileZippy PDF</title><style>img{max-width:100%; max-height:100vh; page-break-after:always; display:block; margin:auto;}</style></head><body>');
+    
+    let loadedCount = 0;
+    imagesList.forEach((file) => {
+        const reader = new FileReader();
+        reader.onload = function(e) {
+            printWindow.document.write(`<img src="${e.target.result}">`);
+            loadedCount++;
+            
+            // 3. जब सारी फोटो लोड हो जाएं, तो असली 'Save as PDF' खोलें
+            if(loadedCount === imagesList.length) {
+                printWindow.document.write('</body></html>');
+                printWindow.document.close();
+                printWindow.focus();
+                setTimeout(() => {
+                    printWindow.print(); // यह कमांड असली पीडीएफ सेव डिब्बा खोल देगी
+                }, 500);
+            }
+        };
+        reader.readAsDataURL(file);
+    });
 }
+
 
 // 6. PDF से JPG
 function convertPdfToJpg() {
