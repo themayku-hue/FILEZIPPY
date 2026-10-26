@@ -1,0 +1,301 @@
+ /* बेसिक सेटिंग और फॉन्ट */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+}
+
+body {
+    background-color: #f4f7f6;
+    color: #333;
+    line-height: 1.6;
+}
+
+/* हेडर डिजाइन */
+header {
+    background: linear-gradient(135deg, #4f46e5, #3b82f6);
+    color: white;
+    text-align: center;
+    padding: 2.5rem 1rem;
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+}
+
+header h1 {
+    font-size: 2.2rem;
+    margin-bottom: 0.5rem;
+    font-weight: 700;
+}
+
+header p {
+    font-size: 1.1rem;
+    opacity: 0.9;
+}
+
+/* कंटेनर */
+.container {
+    max-width: 900px;
+    margin: 2rem auto;
+    padding: 0 1rem;
+}
+
+/* टूल सिलेक्ट करने वाले बटन्स */
+.tool-selector {
+    display: flex;
+    justify-content: center;
+    gap: 1rem;
+    flex-wrap: wrap;
+    margin-bottom: 2rem;
+}
+
+.btn {
+    padding: 0.75rem 1.5rem;
+    font-size: 1rem;
+    font-weight: 600;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+}
+
+.btn-primary { background-color: #4f46e5; color: white; }
+.btn-secondary { background-color: #0ea5e9; color: white; }
+.btn-success { background-color: #10b981; color: white; }
+.btn-warning { background-color: #f59e0b; color: white; }
+.btn-danger { background-color: #ef4444; color: white; }
+
+.btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+    opacity: 0.95;
+}
+
+/* टूल कार्ड्स डिजाइन */
+.tool-card {
+    display: none;
+    background: white;
+    padding: 2rem;
+    border-radius: 12px;
+    box-shadow: 0 4px 6px rgba(0,0,0,0.05);
+    margin-bottom: 2rem;
+    border: 1px solid #e5e7eb;
+}
+
+.tool-card.active {
+    display: block;
+    animation: fadeIn 0.5s ease;
+}
+
+.tool-card h2 {
+    margin-bottom: 1.5rem;
+    color: #1f2937;
+    font-size: 1.5rem;
+    border-bottom: 2px solid #f3f4f6;
+    padding-bottom: 0.5rem;
+}
+
+/* कैमरा और प्रीव्यू बॉक्स */
+.camera-box, .preview-box {
+    width: 100%;
+    max-width: 400px;
+    height: 300px;
+    background-color: #1f2937;
+    margin: 1rem auto;
+    border-radius: 8px;
+    overflow: hidden;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+#webcam, #passport-preview {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+#passport-preview:not([src]) {
+    display: none;
+}
+
+.controls {
+    display: flex;
+    justify-content: center;
+    gap: 0.75rem;
+    margin-top: 1.5rem;
+    flex-wrap: wrap;
+}
+
+.controls .btn {
+    background-color: #374151;
+    color: white;
+}
+
+input[type="file"] {
+    display: block;
+    margin: 1rem auto;
+    padding: 0.5rem;
+}
+
+.compress-settings {
+    text-align: center;
+    margin: 1rem 0;
+    font-size: 1.1rem;
+}
+
+.compress-settings input {
+    padding: 0.4rem;
+    width: 80px;
+    border-radius: 6px;
+    border: 1px solid #ccc;
+    text-align: center;
+}
+
+/* 📷 गैलरी इमेज प्रीव्यू और डिलीट बटन की सजावट */
+#images-preview-zone {
+    display: flex;
+    gap: 15px;
+    justify-content: center;
+    flex-wrap: wrap;
+    margin: 20px 0;
+    padding: 10px;
+    background-color: #f9fafb;
+    border-radius: 8px;
+    border: 1px dashed #cbd5e1;
+}
+
+.preview-wrapper {
+    position: relative;
+    width: 80px;
+    height: 80px;
+}
+
+.preview-wrapper img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    border-radius: 6px;
+    border: 2px solid #e2e8f0;
+}
+
+.remove-btn {
+    position: absolute;
+    top: -8px;
+    right: -8px;
+    background-color: #ef4444;
+    color: white;
+    border: none;
+    border-radius: 50%;
+    width: 20px;
+    height: 20px;
+    font-size: 12px;
+    font-weight: bold;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+    transition: transform 0.2s;
+}
+
+.remove-btn:hover {
+    transform: scale(1.2);
+    background-color: #dc2626;
+}
+
+.seo-content p {
+    color: #4b5563;
+    margin-bottom: 1rem;
+    text-align: justify;
+}
+
+/* 🎨 प्रो-लेवल फुटर डिजाइन */
+.pro-footer {
+    background-color: #1f2937;
+    color: #e5e7eb;
+    padding: 3rem 2rem 1.5rem 2rem;
+    margin-top: 4rem;
+    border-top: 4px solid #4f46e5;
+}
+
+.footer-container {
+    max-width: 900px;
+    margin: 0 auto;
+    display: flex;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 2rem;
+}
+
+.footer-column {
+    flex: 1;
+    min-width: 150px;
+}
+
+.footer-column h3 {
+    color: #ffffff;
+    font-size: 1.1rem;
+    margin-bottom: 1.2rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.footer-column ul {
+    list-style: none;
+    padding: 0;
+}
+
+.footer-column ul li {
+    margin-bottom: 0.75rem;
+}
+
+.footer-column ul li a {
+    color: #9ca3af;
+    text-decoration: none;
+    font-size: 0.95rem;
+    transition: color 0.2s ease;
+}
+
+.footer-column ul li a:hover {
+    color: #3b82f6; 
+}
+
+.footer-bottom {
+    max-width: 900px;
+    margin: 2.5rem auto 0 auto;
+    padding-top: 1.5rem;
+    border-top: 1px solid #374151;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 1rem;
+    font-size: 0.9rem;
+    color: #9ca3af;
+}
+
+.footer-lang {
+    background: #2d3748;
+    padding: 0.4rem 0.8rem;
+    border-radius: 6px;
+    border: 1px solid #4a5568;
+    color: #ffffff;
+}
+
+@media (max-width: 600px) {
+    .footer-container {
+        flex-direction: column;
+        text-align: center;
+    }
+    .footer-bottom {
+        flex-direction: column;
+        text-align: center;
+    }
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(10px); }
+    to { opacity: 1; transform: translateY(0); }
+}
