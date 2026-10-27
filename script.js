@@ -11,8 +11,7 @@ function switchTool(toolName) {
     document.getElementById(`${toolName}-tool`).classList.add('active');
 }
 
- // कैमरा और स्कैन की गई फोटो का डेटा रखने के लिए वेरिएबल्स
-let liveStreamRef = null;
+  let liveStreamRef = null;
 let scannedImageBlobUrl = null;
 
 async function startCamera() {
@@ -28,9 +27,45 @@ async function startCamera() {
         });
         video.srcObject = liveStreamRef;
     } catch (err) {
-        alert("कैमरा चालू करने की परमिशन दें या चेक करें कि कैमरा कहीं और तो चालू नहीं है।");
+        alert("कैमरा चालू करने की परमिशन दें।");
     }
 }
+
+function captureDoc() {
+    const video = document.getElementById('webcam');
+    if (!video || !video.srcObject) {
+        return alert("कृपया पहले 'कैमरा चालू करें' बटन पर क्लिक करें!");
+    }
+    
+    const canvas = document.createElement('canvas');
+    canvas.width = video.videoWidth || 640;
+    canvas.height = video.videoHeight || 480;
+    const ctx = canvas.getContext('2d');
+    ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+    
+    canvas.toBlob(function(blob) {
+        if (scannedImageBlobUrl) URL.revokeObjectURL(scannedImageBlobUrl);
+        scannedImageBlobUrl = URL.createObjectURL(blob);
+        alert("दस्तावेज़ सफलतापूर्वक स्कैन हो गया है! अब नीचे 'PDF डाउनलोड करें' बटन दबाकर इसे सेव करें।");
+    }, 'image/jpeg', 0.9);
+}
+
+// 🎯 यह है वो असली डाउनलोड फंक्शन जो फोन में फाइल सेव कराएगा
+function downloadPDF() {
+    if (!scannedImageBlobUrl) {
+        return alert("डाउनलोड करने के लिए पहले 'स्कैन करें' बटन पर क्लिक करके फोटो खींचें!");
+    }
+    
+    // अदृश्य डाउनलोडर लिंक बनाकर सीधे फोन मेमोरी में सेव कराना
+    const link = document.createElement('a');
+    link.href = scannedImageBlobUrl;
+    link.download = 'scanned-document-filezippy.jpg'; // फोन में इस नाम से फाइल सेव होगी
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+}
+
+
 
 function captureDoc() {
     const video = document.getElementById('webcam');
@@ -237,15 +272,14 @@ function showImagesInGrid() {
     });
 }
 
-function generatePDFFromImages() {
+ function generatePDFFromImages() {
     if(imagesList.length === 0) return alert("फोटो तो चुनो भाई!");
     
-    // 1. बैकग्राउंड में एक नया खाली प्रिंट पेज खोलें
     const printWindow = window.open('', '_blank');
     if(!printWindow) return alert("पॉप-अप ब्लॉक है, कृपया ब्राउज़र में पॉप-अप की अनुमति दें।");
     
-    // 2. पन्ने का मार्जिन 0 किया और फोटो को ऑटो-फिट सेट किया ताकि पेज कभी न कटे
-    printWindow.document.write('<html><head><title>FileZippy PDF</title><style>@page{margin:0;} body{margin:0;} img{width:100vw; height:100vh; object-fit:contain; page-break-after:always; display:block;}</style></head><body>');
+    // पन्ने का मार्जिन 0 किया और इमेज को पेज के साइज में 100% फिट कर दिया ताकि 1 पेज का 2 पेज न बने
+    printWindow.document.write('<html><head><title>FileZippy PDF</title><style>@page{margin:0; size: auto;} body{margin:0; padding:0; background:#fff;} img{width:100vw; height:100vh; object-fit:contain; page-break-after:always; display:block; max-width:100%; max-height:100%;}</style></head><body>');
     
     let loadedCount = 0;
     imagesList.forEach((file) => {
@@ -254,7 +288,6 @@ function generatePDFFromImages() {
             printWindow.document.write(`<img src="${e.target.result}">`);
             loadedCount++;
             
-            // 3. जब सारी फोटो लोड हो जाएं, तो प्रिंट मैनेजर खोलें
             if(loadedCount === imagesList.length) {
                 printWindow.document.write('</body></html>');
                 printWindow.document.close();
