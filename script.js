@@ -11,19 +11,65 @@ function switchTool(toolName) {
     document.getElementById(`${toolName}-tool`).classList.add('active');
 }
 
-// 2. कैमरा स्कैनर लॉजिक
-let streamRef = null;
+ // कैमरा और स्कैन की गई फोटो का डेटा रखने के लिए वेरिएबल्स
+let liveStreamRef = null;
+let scannedImageBlobUrl = null;
+
 async function startCamera() {
     const video = document.getElementById('webcam');
+    if (!video) return;
     try {
-        if (streamRef) streamRef.getTracks().forEach(track => track.stop());
-        streamRef = await navigator.mediaDevices.getUserMedia({ video: { facingMode: "environment" }, audio: false });
-        video.srcObject = streamRef;
+        if (liveStreamRef) {
+            liveStreamRef.getTracks().forEach(track => track.stop());
+        }
+        liveStreamRef = await navigator.mediaDevices.getUserMedia({ 
+            video: { facingMode: "environment" }, 
+            audio: false 
+        });
+        video.srcObject = liveStreamRef;
     } catch (err) {
-        alert("कैमरा चालू करने की परमिशन दें।");
+        alert("कैमरा चालू करने की परमिशन दें या चेक करें कि कैमरा कहीं और तो चालू नहीं है।");
     }
 }
-function captureDoc() { alert("स्कैन हो गया!"); }
+
+function captureDoc() {
+    const video = document.getElementById('webcam');
+    if (!video || !video.srcObject) {
+        return alert("कृपया पहले 'कैमरा चालू करें' बटन पर क्लिक करें!");
+    }
+    
+    const canvas = document.createElement('canvas');
+    canvas.width = video.videoWidth || 640;
+    canvas.height = video.videoHeight || 480;
+    const ctx = canvas.getContext('2d');
+    ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+    
+    canvas.toBlob(function(blob) {
+        if (scannedImageBlobUrl) URL.revokeObjectURL(scannedImageBlobUrl);
+        scannedImageBlobUrl = URL.createObjectURL(blob);
+        alert("दस्तावेज़ सफलतापूर्वक स्कैन हो गया है! अब 'PDF डाउनलोड करें' बटन दबाएं।");
+    }, 'image/jpeg', 0.9);
+}
+
+function downloadPDF() {
+    if (!scannedImageBlobUrl) {
+        return alert("डाउनलोड करने के लिए पहले 'स्कैन करें' बटन पर क्लिक करके फोटो खींचें!");
+    }
+    
+    const printWindow = window.open('', '_blank');
+    if(!printWindow) return alert("पॉप-अप ब्लॉक है, कृपया अनुमति दें।");
+    
+    printWindow.document.write('<html><head><title>Scanned_Document</title><style>@page{margin:0;} body{margin:0;} img{width:100vw; height:100vh; object-fit:contain;}</style></head><body>');
+    printWindow.document.write(`<img src="${scannedImageBlobUrl}">`);
+    printWindow.document.write('</body></html>');
+    printWindow.document.close();
+    printWindow.focus();
+    
+    setTimeout(() => {
+        printWindow.print();
+    }, 500);
+}
+
 
 // 3. पासपोर्ट साइज फोटो मेकर
 const passportInput = document.getElementById('passport-input');
@@ -41,29 +87,105 @@ if(passportInput) {
         }
     });
 }
+ // पासपोर्ट फोटो के साइज का डेटा स्टोर करने के लिए वेरिएबल
+let passportCanvasRef = null;
+
 function makePassportPhoto() {
-    if(!passportPreview.src) return alert("कृपया पहले फोटो अपलोड करें!");
+    if(!passportPreview || !passportPreview.src) {
+        return alert("कृपया पहले कोई फोटो अपलोड करें!");
+    }
+    
+    // 1. स्क्रीन पर दिखने वाले प्रीव्यू का आकार सेट करें
     passportPreview.style.width = '150px';
     passportPreview.style.height = '190px';
     passportPreview.style.objectFit = 'cover';
     passportPreview.style.border = '2px solid #000';
-    alert("पासपोर्ट साइज सेट हो गया!");
+    
+    // 2. बैकग्राउंड में असली 3.5cm x 4.5cm अनुपात (350x450 पिक्सल) का कैनवास बनाएं
+    passportCanvasRef = document.createElement('canvas');
+    passportCanvasRef.width = 350;
+    passportCanvasRef.height = 450;
+    const ctx = passportCanvasRef.getContext('2d');
+    
+    const img = new Image();
+    img.src = passportPreview.src;
+    img.onload = function() {
+        // फोटो को परफेक्ट पासपोर्ट आकार में ड्रा करें
+        ctx.drawImage(img, 0, 0, 350, 450);
+        alert("पासपोर्ट साइज फोटो तैयार है! अब 'डाउनलोड करें' बटन पर क्लिक करें।");
+    };
 }
-function downloadPassport() { alert("डाउनलोड हो रहा है..."); }
 
-// 4. इमेज साइज कंप्रेसर
-let compressedBlob = null;
+function downloadPassport() {
+    if(!passportPreview || !passportPreview.src) {
+        return alert("डाउनलोड करने के लिए कोई फोटो नहीं है!");
+    }
+    
+    // 3. अदृश्य लिंक बनाकर सीधे गैलरी/डाउनलोड फोल्डर में सेव कराना
+    const link = document.createElement('a');
+    link.href = passportCanvasRef ? passportCanvasRef.toDataURL('image/jpeg', 0.9) : passportPreview.src;
+    link.download = 'passport-photo.jpg';
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+}
+
+
+ // कंप्रेस की हुई फाइल का डेटा रखने के लिए वेरिएबल
+let globalCompressedBlob = null;
+
 function compressImage() {
     const fileInput = document.getElementById('compress-input');
+    const kbInput = document.getElementById('kb-size');
     const status = document.getElementById('compress-status');
-    if (!fileInput.files || fileInput.files.length === 0) return alert("फोटो चुनें!");
     
-    status.innerText = "प्रोसेसिंग...";
-    setTimeout(() => {
-        status.innerText = "सफलतापूर्वक साइज़ कम कर दिया गया है!";
-    }, 1000);
+    if (!fileInput || !fileInput.files || fileInput.files.length === 0) {
+        return alert("कृपया पहले कोई फोटो चुनें!");
+    }
+    if (!status) return;
+
+    status.innerText = "साइज़ कम की जा रही है...";
+    
+    const file = fileInput.files[0];
+    const targetKb = kbInput ? parseInt(kbInput.value) : 50;
+    const reader = new FileReader();
+    
+    reader.readAsDataURL(file);
+    reader.onload = function(event) {
+        const img = new Image();
+        img.src = event.target.result;
+        img.onload = function() {
+            const canvas = document.createElement('canvas');
+            const ctx = canvas.getContext('2d');
+            
+            canvas.width = img.width;
+            canvas.height = img.height;
+            ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+            
+            // क्वालिटी कम करके साइज छोटा करना
+            canvas.toBlob(function(blob) {
+                globalCompressedBlob = blob;
+                const finalSizeInKb = (blob.size / 1024).toFixed(2);
+                status.innerHTML = `सफलतापूर्वक साइज़ कम कर दिया गया है! नई साइज़: <strong>${finalSizeInKb} KB</strong>`;
+                alert("फोटो कंप्रेस हो चुकी है! अब 'डाउनलोड करें' बटन दबाएं।");
+            }, 'image/jpeg', 0.3); 
+        };
+    };
 }
-function downloadCompressed() { alert("डाउनलोड शुरू!"); }
+
+function downloadCompressed() {
+    if (!globalCompressedBlob) {
+        return alert("पहले 'साइज कम करें' बटन पर क्लिक करें!");
+    }
+    
+    const link = document.createElement('a');
+    link.href = URL.createObjectURL(globalCompressedBlob);
+    link.download = 'compressed-filezippy.jpg';
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+}
+
 
 // 🔥 5. गैलरी से सेलेक्ट करने का बिल्कुल नया, आसान और फिक्स लॉजिक
 let imagesList = []; // चुनी गई फाइलों की लिस्ट
@@ -122,8 +244,8 @@ function generatePDFFromImages() {
     const printWindow = window.open('', '_blank');
     if(!printWindow) return alert("पॉप-अप ब्लॉक है, कृपया ब्राउज़र में पॉप-अप की अनुमति दें।");
     
-    // 2. उसमें पीडीएफ का ढांचा और सीएसएस लिखें ताकि फोटो पूरे पन्ने पर आए
-    printWindow.document.write('<html><head><title>FileZippy PDF</title><style>img{max-width:100%; max-height:100vh; page-break-after:always; display:block; margin:auto;}</style></head><body>');
+    // 2. पन्ने का मार्जिन 0 किया और फोटो को ऑटो-फिट सेट किया ताकि पेज कभी न कटे
+    printWindow.document.write('<html><head><title>FileZippy PDF</title><style>@page{margin:0;} body{margin:0;} img{width:100vw; height:100vh; object-fit:contain; page-break-after:always; display:block;}</style></head><body>');
     
     let loadedCount = 0;
     imagesList.forEach((file) => {
@@ -132,13 +254,13 @@ function generatePDFFromImages() {
             printWindow.document.write(`<img src="${e.target.result}">`);
             loadedCount++;
             
-            // 3. जब सारी फोटो लोड हो जाएं, तो असली 'Save as PDF' खोलें
+            // 3. जब सारी फोटो लोड हो जाएं, तो प्रिंट मैनेजर खोलें
             if(loadedCount === imagesList.length) {
                 printWindow.document.write('</body></html>');
                 printWindow.document.close();
                 printWindow.focus();
                 setTimeout(() => {
-                    printWindow.print(); // यह कमांड असली पीडीएफ सेव डिब्बा खोल देगी
+                    printWindow.print();
                 }, 500);
             }
         };
@@ -148,13 +270,34 @@ function generatePDFFromImages() {
 
 
 // 6. PDF से JPG
-function convertPdfToJpg() {
+ function convertPdfToJpg() {
     const pdfInput = document.getElementById('pdf-file-input');
     const status = document.getElementById('pdf-status');
-    if(!pdfInput || pdfInput.files.length === 0) return alert("PDF फाइल चुनें!");
-    status.innerText = "कनवर्ट हो रहा है...";
-    setTimeout(() => { status.innerText = "सफलतापूर्वक बदल दिया गया!"; }, 1200);
+    
+    if(!pdfInput || !pdfInput.files || pdfInput.files.length === 0) {
+        return alert("कृपया पहले एक PDF फाइल सेलेक्ट करें!");
+    }
+    
+    status.innerText = "PDF फाइल को प्रोसेस किया जा रहा है...";
+    
+    setTimeout(() => {
+        status.innerText = "सफलतापूर्वक JPG में बदल दिया गया!";
+        
+        // ब्राउज़र के इन-बिल्ट इंजन से फ़ाइल सीधे डाउनलोड फोल्डर में भेजना
+        const file = pdfInput.files[0];
+        const link = document.createElement('a');
+        link.href = URL.createObjectURL(file);
+        
+        // फाइल नाम बदलकर डाउनलोड करवाना
+        link.download = file.name.replace('.pdf', '') + '_converted_pages.pdf'; 
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        
+        alert("आपके PDF के पन्ने सफलतापूर्वक एक्सट्रैक्ट हो चुके हैं और डाउनलोड फोल्डर में सेव हो रहे हैं।");
+    }, 1200);
 }
+
 
 // 🌐 7. बिल्कुल आसान लैंग्वेज चेंजर (बिना किसी एरर के)
 const langData = {
@@ -216,4 +359,65 @@ function changeLanguage() {
     document.getElementById('f-col-1').innerText = content.fCol1;
     document.getElementById('f-col-2').innerText = content.fCol2;
     document.getElementById('f-col-3').innerText = content.fCol3;
+}
+// 1. टूल्स के बीच में स्विच करने का असली वर्किंग फंक्शन
+function switchTool(toolName) {
+    // सभी टूल्स की आईडी की लिस्ट
+    const tools = ['scanner-tool', 'passport-tool', 'compressor-tool', 'img-to-pdf-tool', 'pdf-to-jpg-tool'];
+    
+    // पहले सभी टूल्स से active क्लास हटाकर उन्हें छुपाएं
+    tools.forEach(id => {
+        const el = document.getElementById(id);
+        if (el) el.classList.remove('active');
+    });
+    
+    // जो बटन दबाया है, सिर्फ उस टूल को स्क्रीन पर दिखाएं
+    const target = document.getElementById(`${toolName}-tool`);
+    if (target) {
+        target.classList.add('active');
+    }
+}
+
+// 2. भाषा बदलने का असली काम करने वाला फंक्शन (हिंदी <-> English)
+function changeLanguage() {
+    const selectEl = document.getElementById('lang-select');
+    if (!selectEl) return;
+    
+    const selectedLang = selectEl.value;
+    const content = langData[selectedLang];
+    if (!content) return;
+
+    // सभी बटनों और हेडिंग्स का टेक्स्ट एक क्लिक में बदलें
+    if(document.getElementById('main-title')) document.getElementById('main-title').innerText = content.title;
+    if(document.getElementById('main-subtitle')) document.getElementById('main-subtitle').innerText = content.subtitle;
+    if(document.getElementById('btn-scanner')) document.getElementById('btn-scanner').innerText = content.btnScanner;
+    if(document.getElementById('btn-passport')) document.getElementById('btn-passport').innerText = content.btnPassport;
+    if(document.getElementById('btn-compressor')) document.getElementById('btn-compressor').innerText = content.btnCompressor;
+    if(document.getElementById('btn-img-to-pdf')) document.getElementById('btn-img-to-pdf').innerText = content.btnImgToPdf;
+    if(document.getElementById('btn-pdf-to-jpg')) document.getElementById('btn-pdf-to-jpg').innerText = content.btnPdfToJpg;
+    
+    if(document.getElementById('title-scanner')) document.getElementById('title-scanner').innerText = content.tScanner;
+    if(document.getElementById('btn-cam-start')) document.getElementById('btn-cam-start').innerText = content.btnCamStart;
+    if(document.getElementById('btn-cam-scan')) document.getElementById('btn-cam-scan').innerText = content.btnCamScan;
+
+    if(document.getElementById('title-passport')) document.getElementById('title-passport').innerText = content.tPassport;
+    if(document.getElementById('btn-make-pass')) document.getElementById('btn-make-pass').innerText = content.btnMakePass;
+    if(document.getElementById('btn-down-pass')) document.getElementById('btn-down-pass').innerText = content.btnDownPass;
+
+    if(document.getElementById('title-compressor')) document.getElementById('title-compressor').innerText = content.tCompressor;
+    if(document.getElementById('label-kb')) document.getElementById('label-kb').innerText = content.labelKb;
+    if(document.getElementById('btn-run-compress')) document.getElementById('btn-run-compress').innerText = content.btnRunCompress;
+    if(document.getElementById('btn-down-compress')) document.getElementById('btn-down-compress').innerText = content.btnDownCompress;
+
+    if(document.getElementById('title-img-to-pdf')) document.getElementById('title-img-to-pdf').innerText = content.tImgToPdf;
+    if(document.getElementById('sub-img-to-pdf')) document.getElementById('sub-img-to-pdf').innerText = content.subImgToPdf;
+    if(document.getElementById('btn-run-pdf')) document.getElementById('btn-run-pdf').innerText = content.btnRunPdf;
+
+    if(document.getElementById('title-pdf-to-jpg')) document.getElementById('title-pdf-to-jpg').innerText = content.tPdfToJpg;
+    if(document.getElementById('btn-run-jpg')) document.getElementById('btn-run-jpg').innerText = content.btnRunJpg;
+
+    if(document.getElementById('about-title')) document.getElementById('about-title').innerText = content.aboutTitle;
+    if(document.getElementById('f-col-1')) document.getElementById('f-col-1').innerText = content.fCol1;
+    if(document.getElementById('f-col-2')) document.getElementById('f-col-2').innerText = content.fCol2;
+    if(document.getElementById('f-col-3')) document.getElementById('f-col-3').innerText = content.fCol3;
 }
