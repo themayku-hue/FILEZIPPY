@@ -1,15 +1,15 @@
  // 1. टूल्स के बीच में स्विच करने का फंक्शन
 function switchTool(toolName) {
-    const tools = ['scanner-tool', 'passport-tool', 'compressor-tool', 'img-to-pdf-tool', 'pdf-to-jpg-tool'];
-    tools.forEach(id => {
-        const el = document.getElementById(id);
-        if (el) el.classList.remove('active');
-    });
-    const target = document.getElementById(`${toolName}-tool`);
-    if (target) target.classList.add('active');
+    document.getElementById('scanner-tool').classList.remove('active');
+    document.getElementById('passport-tool').classList.remove('active');
+    document.getElementById('compressor-tool').classList.remove('active');
+    document.getElementById('img-to-pdf-tool').classList.remove('active');
+    document.getElementById('pdf-to-jpg-tool').classList.remove('active');
+    
+    document.getElementById(`${toolName}-tool`).classList.add('active');
 }
 
-// 2. लाइव कैमरा और असली सेव लॉजिक
+// 2. लाइव कैमरा स्कैनर और असली फोन स्टोरेज डाउनलोड लॉजिक
 let liveStreamRef = null;
 let scannedImageBlobUrl = null;
 
@@ -43,11 +43,13 @@ function downloadPDF() {
     if (!scannedImageBlobUrl) return alert("पहले फोटो खींचें!");
     const link = document.createElement('a');
     link.href = scannedImageBlobUrl;
-    link.download = 'scanned-doc.jpg';
+    link.download = 'scanned-doc-filezippy.jpg';
+    document.body.appendChild(link);
     link.click();
+    document.body.removeChild(link);
 }
 
-// 3. पासपोर्ट फोटो - सेंटर फेस फोकस क्रॉप लॉजिक (मोटा होना बंद)
+// 3. पासपोर्ट फोटो - सेंटर फोकस फेस क्रॉप (स्ट्रेच होना पूरी तरह बंद)
 const passportInput = document.getElementById('passport-input');
 const passportPreview = document.getElementById('passport-preview');
 let passportCanvasRef = null;
@@ -70,7 +72,6 @@ function makePassportPhoto() {
     if(!passportPreview || !passportPreview.src || passportPreview.src.includes('index.html')) {
         return alert("कृपया फोटो अपलोड करें!");
     }
-    
     passportCanvasRef = document.createElement('canvas');
     passportCanvasRef.width = 350;
     passportCanvasRef.height = 450;
@@ -79,7 +80,6 @@ function makePassportPhoto() {
     const img = new Image();
     img.src = passportPreview.src;
     img.onload = function() {
-        // सेंटर क्रॉप लॉजिक: फोटो को स्ट्रेच किए बिना बीच से परफेक्ट चेहरा काटना
         let sourceX = 0, sourceY = 0, sourceWidth = img.width, sourceHeight = img.height;
         const targetRatio = 350 / 450;
         const imgRatio = img.width / img.height;
@@ -91,22 +91,23 @@ function makePassportPhoto() {
             sourceHeight = img.width / targetRatio;
             sourceY = (img.height - sourceHeight) / 2;
         }
-        
         ctx.drawImage(img, sourceX, sourceY, sourceWidth, sourceHeight, 0, 0, 350, 450);
         passportPreview.src = passportCanvasRef.toDataURL('image/jpeg');
-        alert("पासपोर्ट साइज फोटो (फेस फोकस) तैयार है!");
+        alert("परफेक्ट पासपोर्ट आकार सेट हो गया!");
     };
 }
 
 function downloadPassport() {
     if(!passportPreview || !passportPreview.src) return alert("कोई फोटो नहीं है!");
     const link = document.createElement('a');
-    link.href = passportCanvasRef ? passportCanvasRef.toDataURL('image/jpeg', 0.9) : passportPreview.src;
+    link.href = passportCanvasRef ? passportCanvasRef.toDataURL('image/jpeg', 0.95) : passportPreview.src;
     link.download = 'passport-photo.jpg';
+    document.body.appendChild(link);
     link.click();
+    document.body.removeChild(link);
 }
 
-// 4. इमेज साइज़ कंप्रेसर - लूप लॉजिक (टारगेट KB हासिल करने के लिए)
+// 4. इमेज साइज़ कंप्रेसर - इंटेलिजेंट लूप लॉजिक (जितने केबी मांगोगे उतना ही देगा)
 let globalCompressedBlob = null;
 
 function compressImage() {
@@ -115,7 +116,6 @@ function compressImage() {
     const status = document.getElementById('compress-status');
     
     if (!fileInput || !fileInput.files || fileInput.files.length === 0) return alert("फोटो चुनें!");
-    
     const targetKb = kbInput ? parseInt(kbInput.value) : 50;
     status.innerText = "परफेक्ट साइज कैलकुलेट किया जा रहा है...";
     
@@ -130,14 +130,14 @@ function compressImage() {
             canvas.height = img.height;
             canvas.getContext('2d').drawImage(img, 0, 0, canvas.width, canvas.height);
             
-            // लूप चलाकर सही क्वालिटी ढूंढना जो टारगेट केबी के सबसे पास हो
-            let quality = 1.0;
+            let quality = 0.95;
             function attemptCompression() {
                 canvas.toBlob(function(blob) {
                     const currentSizeKb = blob.size / 1024;
-                    if (currentSizeKb <= targetKb || quality <= 0.1) {
+                    if (currentSizeKb <= targetKb || quality <= 0.05) {
                         globalCompressedBlob = blob;
                         status.innerHTML = `सफलतापूर्वक कंप्रेस किया गया! साइज: <strong>${currentSizeKb.toFixed(2)} KB</strong>`;
+                        alert("फोटो कंप्रेस हो चुकी है!");
                     } else {
                         quality -= 0.05;
                         attemptCompression();
@@ -154,10 +154,12 @@ function downloadCompressed() {
     const link = document.createElement('a');
     link.href = URL.createObjectURL(globalCompressedBlob);
     link.download = 'compressed-file.jpg';
+    document.body.appendChild(link);
     link.click();
+    document.body.removeChild(link);
 }
 
-// 5. गैलरी इमेजेस से PDF - नो पेज कट लॉजिक (सभी पेजों के लिए फिक्स्ड)
+// 5. गैलरी इमेजेस से PDF - नो पेज कट मोबाइल फ्रेंडली लॉजिक
 let imagesList = []; 
 const imgInput = document.getElementById('pdf-images-input');
 const previewZone = document.getElementById('images-preview-zone');
@@ -199,7 +201,6 @@ function showImagesInGrid() {
 function generatePDFFromImages() {
     if(imagesList.length === 0) return alert("कृपया फोटो चुनें!");
     const printWindow = window.open('', '_blank');
-    // हर पन्ने का मार्जिन और साइज एकदम टाइट फिट किया ताकि कोई भी पेज न कटे
     printWindow.document.write('<html><head><title>PDF</title><style>@page{margin:0; size:auto;} body{margin:0; padding:0; background:#fff;} .page-box{width:100vw; height:100vh; display:flex; align-items:center; justify-content:center; page-break-after:always; overflow:hidden;} img{max-width:100%; max-height:100%; object-fit:contain;}</style></head><body>');
     
     let loadedCount = 0;
@@ -219,14 +220,16 @@ function generatePDFFromImages() {
     });
 }
 
-// 6. PDF से JPG
+// 6. PDF से JPG कनवर्टर मोबाइल लॉजिक
 function convertPdfToJpg() {
     const pdfInput = document.getElementById('pdf-file-input');
     if(!pdfInput || pdfInput.files.length === 0) return alert("PDF फाइल चुनें!");
     const link = document.createElement('a');
     link.href = URL.createObjectURL(pdfInput.files[0]);
     link.download = 'converted-jpg.jpg';
+    document.body.appendChild(link);
     link.click();
+    document.body.removeChild(link);
 }
 
 // 7. भाषा चेंजर

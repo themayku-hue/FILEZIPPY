@@ -1,68 +1,20 @@
  <!DOCTYPE html>
 <html lang="hi">
 <head>
-    <!-- 📄 असली पीडीएफ और इमेज डाउनलोड चालू करने के लिए ये टूल्स ज़रूरी हैं -->
-<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
-<script src="https://cloudflare.com"></script>
-
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    
-    <!-- 🎯 मुख्य SEO कीवर्ड्स टाइटल (गूगल में यही नाम चमकेगा) -->
-    <title>डिजिटल वर्क टूलकिट | फ्री ऑनलाइन पासपोर्ट फोटो मेकर और PDF कनवर्टर</title>
-    
-    <!-- 📝 सर्च डिस्क्रिप्शन (जो गूगल सर्च में नाम के नीचे दिखता है) -->
-    <meta name="description" content="100% सुरक्षित और मुफ्त ऑनलाइन डिजिटल टूलकिट। मोबाइल से लाइव कैमरा स्कैन करें, 3.5x4.5 पासपोर्ट साइज फोटो बनाएं, इमेज साइज (KB) कम करें, और फोटो से पीडीएफ (Images to PDF) व PDF से JPG बदलें।">
-    <meta name="keywords" content="digital work toolkit, passport size photo maker online free, images to pdf converter, mobile scanner online, pdf to jpg high quality, image compressor 20kb, photo size reducer for ssc form, auto crop photo tool">
-    <meta name="author" content="डिजिटल वर्क टूलकिट">
-    <meta name="robots" content="index, follow">
-
-    <!-- 🌐 सोशल मीडिया शेयरिंग SEO (Open Graph Tags) -->
-    <meta property="og:title" content="डिजिटल वर्क टूलकिट | फ्री ऑनलाइन पीडीएफ और इमेज टूल्स">
-    <meta property="og:description" content="बिना ऐप डाउनलोड किए मोबाइल से फोटो रीसाइज करें, स्कैन करें और पीडीएफ बनाएं। 100% सुरक्षित क्लाइंट-साइड टूल्स।">
-    <meta property="og:type" content="website">
-    <meta property="og:site_name" content="डिजिटल वर्क टूलकिट">
-
-    <!-- 🧠 गूगल का वीआईपी टिकट (Schema Markup JSON-LD) 
-         इसे देखकर गूगल समझ जाता है कि यह एक हाई-क्वालिटी सॉफ्टवेयर/टूल वेबसाइट है -->
-    <script type="application/ld+json">
-    {
-      "@context": "https://schema.org",
-      "@type": "WebApplication",
-      "name": "डिजिटल वर्क टूलकिट (Digital Work Toolkit)",
-      "url": "https://yourdomain.com",
-      "applicationCategory": "BusinessApplication, Utilities",
-      "operatingSystem": "All",
-      "browserRequirements": "Requires HTML5 support",
-      "description": "फ्री ऑनलाइन टूलकिट जो पासपोर्ट फोटो मेकर, लाइव कैमरा स्कैनर, इमेज कंप्रेसर (KB Reducer), इमेज टू पीडीएफ और पीडीएफ टू जेपीजी कनवर्टर जैसी सुविधाएं देता है।",
-      "offers": {
-        "@type": "Offer",
-        "price": "0",
-        "priceCurrency": "INR"
-      },
-      "featureList": [
-        "Online Passport Size Photo Maker",
-        "Live Camera Scanner with PDF export",
-        "Image KB Size Compressor for Government Forms",
-        "Multiple Images to PDF Converter with Delete Option",
-        "PDF to JPG High Quality Converter"
-      ]
-    }
-    </script>
-
+    <title>FileZippy | फ्री ऑनलाइन पीडीएफ और इमेज टूल्स</title>
     <link rel="stylesheet" href="style.css">
-
-
 </head>
 <body>
 
     <header>
-        <h1 id="main-title">डिजिटल वर्क टूलकिट</h1>
+        <h1 id="main-title">FileZippy टूलकिट</h1>
         <p id="main-subtitle">स्मार्ट टूल्स जो आपके रोज़मर्रा के काम को आसान बनाएं</p>
     </header>
 
     <main class="container">
-        <!-- टूल सिलेक्ट करने वाले 5 बटन -->
+        <!-- 5 मुख्य टूल बटन्स -->
         <div class="tool-selector">
             <button class="btn btn-primary" id="btn-scanner" onclick="switchTool('scanner')">📷 लाइव कैमरा स्कैनर</button>
             <button class="btn btn-secondary" id="btn-passport" onclick="switchTool('passport')">🖼️ पासपोर्ट फोटो मेकर</button>
@@ -78,12 +30,13 @@
             <div class="controls">
                 <button class="btn" id="btn-cam-start" onclick="startCamera()">कैमरा चालू करें</button>
                 <button class="btn" id="btn-cam-scan" onclick="captureDoc()">स्कैन करें</button>
+                <button class="btn" id="btn-cam-down" onclick="downloadPDF()">PDF डाउनलोड करें</button>
             </div>
         </div>
 
         <!-- 2. पासपोर्ट साइज फोटो मेकर -->
         <div id="passport-tool" class="tool-card">
-            <h2 id="title-passport">पासपोर्ट साइज फोटो मेकर</h2>
+            <h2 id="title-passport">पासポート साइज फोटो मेकर</h2>
             <input type="file" id="passport-input" accept="image/*">
             <div class="preview-box"><img id="passport-preview" alt="Preview"></div>
             <div class="controls">
@@ -94,7 +47,7 @@
 
         <!-- 3. इमेज साइज कंप्रेसर -->
         <div id="compressor-tool" class="tool-card">
-            <h2 id="title-compressor">इमेज साइज कंप्रेसर (KB Reducer)</h2>
+            <h2>इमेज साइज कंप्रेसर (KB Reducer)</h2>
             <input type="file" id="compress-input" accept="image/*">
             <div class="compress-settings">
                 <label id="label-kb">कितने KB के अंदर चाहिए?: </label>
@@ -107,7 +60,7 @@
             <p id="compress-status" style="margin-top:10px; color:#10b981; font-weight:bold; text-align:center;"></p>
         </div>
 
-        <!-- 4. गैलरी से फोटो सेलेक्ट करके PDF बनाना (मस्त ग्रिड और डिलीट बटन के साथ) -->
+        <!-- 4. गैलरी इमेज से PDF कनवर्टर -->
         <div id="img-to-pdf-tool" class="tool-card">
             <h2 id="title-img-to-pdf">गैलरी इमेज से PDF कनवर्टर</h2>
             <p id="sub-img-to-pdf" style="text-align:center; color:#666;">आप अपनी गैलरी से एक या एक से ज़्यादा फोटो एक साथ चुन सकते हैं</p>
@@ -128,14 +81,14 @@
             </div>
         </div>
 
-        <!-- About Us सेक्शन -->
+        <!-- About Us -->
         <div class="seo-content" style="background:white; padding:2rem; border-radius:12px; margin-top:2rem; border:1px solid #e5e7eb;">
             <h2 id="about-title" style="color:#111827; border-bottom:2px solid #4f46e5; padding-bottom:8px;">हमारे बारे में (About Us)</h2>
-            <p id="about-p1"><strong>डिजिटल वर्क टूलकिट</strong> एक मुफ्त वेब यूटिलिटी प्लेटफॉर्म है। हमारा मुख्य उद्देश्य छात्रों और कामकाजी लोगों को बिना किसी भारी सॉफ़्टवेयर के ज़रूरी डिजिटल टूल्स एक ही जगह पर उपलब्ध कराना है। सारा काम आपके फोन या कंप्यूटर के ब्राउज़र में सुरक्षित रूप से ही होता है।</p>
+            <p><strong>FileZippy</strong> एक मुफ्त वेब यूटिलिटी प्लेटफॉर्म है। हमारा मुख्य उद्देश्य छात्रों को बिना किसी ऐप के ज़रूरी डिजिटल टूल्स एक ही जगह पर उपलब्ध कराना है।</p>
         </div>
     </main>
 
-    <!-- प्रीमियम फुटर सेक्शन -->
+    <!-- फुटर -->
     <footer class="pro-footer">
         <div class="footer-container">
             <div class="footer-column">
@@ -169,7 +122,7 @@
                 </select>
             </div>
             <div class="footer-copyright">
-                &copy; 2026 डिजिटल वर्क टूलकिट. सभी अधिकार सुरक्षित हैं।
+                &copy; 2026 FileZippy टूलकिट. सभी अधिकार सुरक्षित हैं।
             </div>
         </div>
     </footer>
